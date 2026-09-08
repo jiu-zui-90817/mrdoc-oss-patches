@@ -1,42 +1,33 @@
-# MrDoc 开源版补丁仓库 (mrdoc-oss-patches)
+# MrDoc 开源版补丁仓库
 
-专门存放 [MrDoc 开源版](https://gitee.com/zmister/MrDoc) 的**最小侵入补丁**，方便：
+针对 [Gitee zmister/MrDoc](https://gitee.com/zmister/MrDoc) 开源版的补丁集合。
 
-- 按功能单独取用
-- 每个补丁标明**适用上游版本**
-- 官方升级后按文件替换 / 手工合并
-
-> 本仓库**不是** MrDoc 完整 fork，只保留与上游的差异文件与说明。
+**用法很简单：每个补丁目录里的文件路径与官方仓库一致，复制覆盖到你挂载的 MrDoc 代码目录即可。**
 
 ## 补丁列表
 
-| 补丁 | 目录 | 适用上游版本 | 说明 |
-|------|------|--------------|------|
-| 无限文档层级 | [`patches/unlimited-doc-level/`](patches/unlimited-doc-level/) | Gitee `zmister/MrDoc` **master @ 2026-09-08**（CHANGES 含 v1.1.0；发布标签常见仍为 0.9.x） | 去掉最多 3 级限制，支持任意层级目录与上级选择 |
+| 补丁 | 目录 | 适用上游 |
+|------|------|----------|
+| 无限文档层级 | [patches/unlimited-doc-level/](patches/unlimited-doc-level/) | Gitee `master` @ 2026-09-08（CHANGES 含 v1.1.0；Release 标签常见仍为 0.9.x） |
 
-## 使用方式（Docker 官方镜像）
+## 通用安装（Docker 官方镜像）
 
-官方镜像只提供运行环境，代码通过挂载生效。对每个补丁：
+```bash
+# 假设你的代码挂载在 /opt/MrDoc
+cd /opt/MrDoc
 
-1. 阅读该补丁目录下的 `META.md`
-2. 备份生产环境对应文件
-3. 用补丁内文件覆盖挂载目录中的同路径文件
-4. `docker restart mrdoc`
-5. 浏览器强制刷新（Ctrl+F5）
+# 备份
+cp app_doc/views.py app_doc/views.py.bak
+cp template/app_doc/editor/create_doc.html template/app_doc/editor/create_doc.html.bak
+cp template/app_doc/editor/modify_doc.html template/app_doc/editor/modify_doc.html.bak
 
-## 升级官方后怎么办
+# 覆盖（把下面源路径换成本仓库 patches/unlimited-doc-level）
+cp -a patches/unlimited-doc-level/app_doc/views.py app_doc/views.py
+cp -a patches/unlimited-doc-level/template/app_doc/editor/create_doc.html template/app_doc/editor/create_doc.html
+cp -a patches/unlimited-doc-level/template/app_doc/editor/modify_doc.html template/app_doc/editor/modify_doc.html
 
-1. 先按官方流程更新代码（`git pull` 等）
-2. 对照各补丁 `META.md` 中的「涉及文件」
-3. 若官方改动了同一文件：用 diff/合并工具把补丁逻辑重新合入，**不要盲覆盖**
-4. 更新该补丁 `META.md` 中的「适用上游版本」与验证日期
+docker restart mrdoc
+# 浏览器 Ctrl+F5
+```
 
-## 设计原则
-
-- 尽量少改核心大函数；能局部插入就不整段重写（历史补丁可能例外）
-- 一个功能一个目录，互不捆绑
-- 每个补丁必须写明适用版本与替换文件清单
-
-## 免责声明
-
-与上游 MrDoc 同样遵循其开源协议精神。补丁按「现状」提供，请在自有环境验证后再用于生产。
+每个补丁目录内的 `META.md` 写明适用版本与实现说明。官方升级后请对照 META 再覆盖或手工合并。
