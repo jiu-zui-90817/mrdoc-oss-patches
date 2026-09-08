@@ -6,7 +6,7 @@
 - **分支**：`master`
 - **快照日期**：2026-09-08
 - **版本说明**：上游 CHANGES 已出现 **v1.1.0** 相关记录；GitHub/Gitee **Release 标签**当时仍常见为 **0.9.9** 一带。以 **master 代码结构**为准，而非仅看 tag。
-- **验证环境**：Docker 官方运行镜像 + 宿主机挂载代码目录
+- **验证环境**：Docker 官方运行镜像 + 宿主机挂载代码目录；生产已验证可选第 4 级及以上上级文档。
 
 若你的代码与 2026-09-08 的 master 差异较大，请先 diff 再合并，不要直接覆盖。
 
@@ -24,6 +24,8 @@
 | `app_doc/views.py` | `app_doc/views.py` |
 | `template/app_doc/editor/create_doc.html` | `template/app_doc/editor/create_doc.html` |
 | `template/app_doc/editor/modify_doc.html` | `template/app_doc/editor/modify_doc.html` |
+
+完整可替换文件位于上述路径（本目录下保持与 MrDoc 相同的相对路径）。
 
 ## 安装步骤
 
@@ -57,4 +59,4 @@ docker restart mrdoc
 
 | 日期 | 说明 |
 |------|------|
-| 2026-09-08 | 首版：后端递归 + 前端取消三级限制 |
+| 2026-09-08 | 首版：后端递归 + 前端取消三级限制；完整文件入库 |
