@@ -1,0 +1,103 @@
+--- a/app_doc/views.py
++++ b/app_doc/views.py
+@@ -111,73 +111,36 @@
+ 
+ # 获取文集的文档目录
+def get_pro_toc(pro_id):
+-    # 查询存在上级文档的文档
+-    parent_id_list = Doc.objects.filter(
+-        top_doc=pro_id,
+-        status=1
+-    ).exclude(parent_doc=0).values_list('parent_doc',flat=True)
+-    # 获取存在上级文档的上级文档ID
+-    # print(parent_id_list)
+-    doc_list = []
+-    n = 0
+-    # 获取一级文档
+-    top_docs = Doc.objects.filter(top_doc=pro_id, parent_doc=0, status=1).values('id', 'name','open_children','editor_mode').order_by('sort')
+-    # 遍历一级文档
+-    for doc in top_docs:
+-        top_item = {
++    """递归构建文集文档目录树，支持无限层级"""
++    # 一次取出该文集所有已发布文档，避免按层反复查库
++    all_docs = list(
++        Doc.objects.filter(top_doc=pro_id, status=1)
++        .values('id', 'name', 'parent_doc', 'open_children', 'editor_mode')
++        .order_by('sort')
++    )
++
++    # parent_doc -> [children]
++    children_map = {}
++    for d in all_docs:
++        children_map.setdefault(d['parent_doc'], []).append(d)
++
++    def build_node(doc):
++        item = {
+             'id': doc['id'],
+             'name': doc['name'],
+-            'open_children':doc['open_children'],
+-            'editor_mode':doc['editor_mode'],
+-            'editor_icon': EDITOR_MODE_ICON_MAP[doc['editor_mode']]
++            'open_children': doc.get('open_children', False),
++            'editor_mode': doc['editor_mode'],
++            'editor_icon': EDITOR_MODE_ICON_MAP.get(doc['editor_mode'], ''),
+         }
+-        # 如果一级文档存在下级文档，查询其二级文档
+-        if doc['id'] in parent_id_list:
+-            # 获取二级文档
+-            sec_docs = Doc.objects.filter(
+-                top_doc=pro_id,
+-                parent_doc=doc['id'],
+-                status=1
+-            ).values('id', 'name','open_children','editor_mode').order_by('sort')
+-            top_item['sub'] = []
+-            for doc in sec_docs:
+-                sec_item = {
+-                    'id': doc['id'],
+-                    'name': doc['name'],
+-                    'open_children': doc['open_children'],
+-                    'editor_mode': doc['editor_mode'],
+-                    'editor_icon' : EDITOR_MODE_ICON_MAP[doc['editor_mode']]
+-                }
+-                # 如果二级文档存在下级文档，查询第三级文档
+-                if doc['id'] in parent_id_list:
+-                    # 获取三级文档
+-                    thr_docs = Doc.objects.filter(
+-                        top_doc=pro_id,
+-                        parent_doc=doc['id'],
+-                        status=1
+-                    ).values('id','name','editor_mode').order_by('sort')
+-                    sec_item['sub'] = []
+-                    for doc in thr_docs:
+-                        item = {
+-                            'id': doc['id'],
+-                            'name': doc['name'],
+-                            'editor_mode': doc['editor_mode'],
+-                            'editor_icon': EDITOR_MODE_ICON_MAP[doc['editor_mode']]
+-                        }
+-                        sec_item['sub'].append(item)
+-                        n += 1
+-                    top_item['sub'].append(sec_item)
+-                    n += 1
+-                else:
+-                    top_item['sub'].append(sec_item)
+-                    n += 1
+-            doc_list.append(top_item)
+-            n += 1
+-        # 如果一级文档没有下级文档，直接保存
+-        else:
+-            doc_list.append(top_item)
+-            n += 1
+-    return (doc_list,n)
++        kids = children_map.get(doc['id'], [])
++        if kids:
++            item['sub'] = [build_node(c) for c in kids]
++        return item
++
++    top_docs = children_map.get(0, [])
++    doc_list = [build_node(d) for d in top_docs]
++    n = len(all_docs)
++    return (doc_list, n)
+ 
+
+ # 文集列表（首页）
