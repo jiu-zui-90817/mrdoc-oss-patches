@@ -1,0 +1,14 @@
+{# 递归渲染排序节点，支持无限层级 #}
+<li data-sortable-id="{{ node.id }}" class="list-group-item">
+    <i class="iconfont mrdoc-icon-wendang"></i> {{ node.title }}
+    {% if node.children %}
+        <i class="layui-icon layui-icon-down switch-toc"></i>
+    {% endif %}
+    <ul class="list-group nested-sortable">
+        {% if node.children %}
+            {% for child in node.children %}
+                {% include "app_doc/manage/manage_project_doc_sort_node.html" with node=child %}
+            {% endfor %}
+        {% endif %}
+    </ul>
+</li>
