@@ -1479,19 +1479,23 @@ def move_doc(request):
         except:
             logger.exception(_("移动文档异常"))
             return JsonResponse({'status':False,'data':_('移动文档失败')})
-    # 包含下级文档一起移动
+    # 包含下级文档一起移动（递归更新全部子孙的 top_doc，支持无限层级）
     elif move_type == '2':
         try:
             # 修改文档的所属文集和上级文档实现移动文档
             Doc.objects.filter(id=int(doc_id)).update(parent_doc=int(parent_id), top_doc=int(pro_id))
-            # 修改其子文档的文集归属
-            child_doc = Doc.objects.filter(parent_doc=doc_id)
-            child_doc.update(top_doc=int(pro_id))
-            # 遍历子文档，如果其存在下级文档，那么继续修改所属文集
-            for child in child_doc:
-                Doc.objects.filter(parent_doc=child.id).update(top_doc=int(pro_id))
+            # 递归收集全部子孙文档 ID，统一改所属文集（保留 parent_doc 树结构）
+            descendant_ids = []
+            queue = [int(doc_id)]
+            while queue:
+                cur = queue.pop()
+                children = list(Doc.objects.filter(parent_doc=cur).values_list('id', flat=True))
+                descendant_ids.extend(children)
+                queue.extend(children)
+            if descendant_ids:
+                Doc.objects.filter(id__in=descendant_ids).update(top_doc=int(pro_id))
             return JsonResponse({'status': True, 'data':{'pro_id':pro_id,'doc_id':doc_id}})
-        except:
+        except Exception:
             logger.exception(_("移动包含下级的文档异常"))
             return JsonResponse({'status': False, 'data': _('移动文档失败')})
     else:
